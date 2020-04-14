@@ -62,7 +62,7 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
             and scorer
         """
         midx = pd.MultiIndex(levels=[[], []],
-                             labels=[[], []],
+                             codes=[[], []],
                              names=['cue_nr', 'threshold_nr'])
         threshold_df = pd.DataFrame(columns=['feature', 'direction', 'threshold', 'type', self.scorer.__name__],
                                     index=midx)
@@ -220,7 +220,7 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
         """
         relevant_features = self.thresholds.head(self.max_levels)
         midx = pd.MultiIndex(levels=[[], []],
-                             labels=[[], []],
+                             codes=[[], []],
                              names=['tree', 'idx'])
         tree_df = pd.DataFrame(
             columns=['feature', 'direction', 'threshold', 'type', self.scorer.__name__, 'fraction_used'], index=midx)
