@@ -72,6 +72,8 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
             logging.debug('Get threshold for {}'.format(col))
             j = 0
 
+            print(col)
+
             if X[col].dtype.name == 'category':
                 # categorical
                 categories = X[col].cat.categories
@@ -161,7 +163,7 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
                 outcome = operator(row[cue_row['feature']], cue_row['threshold'])
 
                 # store prediction in series
-                ret_ser.set_value(index, outcome)
+                ret_ser.at[index] = outcome
 
                 # exit tree if outcome is exit or last cue reached
                 if (cue_row['exit'] == int(outcome)) or (index + 1 == nr_rows):
@@ -225,6 +227,7 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
         tree_df = pd.DataFrame(
             columns=['feature', 'direction', 'threshold', 'type', self.scorer.__name__, 'fraction_used'], index=midx)
         for tree in range(2 ** (self.max_levels - 1)):
+            print(tree)
             logging.debug('Grow tree {}...'.format(tree))
             for index, feature_row in relevant_features.iterrows():
                 tree_df['threshold'] = tree_df['threshold'].astype(object)
@@ -262,19 +265,20 @@ class FastFrugalTreeClassifier(BaseEstimator, ClassifierMixin):
             Dataframe of tree
         """
         if idx is None:
-            idx = self.all_trees[self.scorer.__name__].idxmax()[0]
+            idx = self.all_trees[self.scorer.__name__].astype('float').idxmax()[0]
 
         tree_df = self.all_trees.loc[idx]
 
         if decision_view:
             def exit_action(exit):
                 ret_ser = pd.Series()
-                ret_ser.set_value('IF YES', '↓')
-                ret_ser.set_value('IF NO', '↓')
+                # ret_ser.set_value('IF YES', '↓')
+                ret_ser.at['IF YES'] = '↓'
+                ret_ser.at['IF NO'] = '↓'
                 if exit <= 0.5:
-                    ret_ser.set_value('IF NO', 'decide NO')
+                    ret_ser.at['IF NO'] = 'decide NO'
                 if exit >= 0.5:
-                    ret_ser.set_value('IF YES', 'decide YES')
+                    ret_ser.at['IF YES'] = 'decide YES'
                 return ret_ser
 
             tree_df = pd.concat([tree_df, tree_df['exit'].apply(exit_action)], axis=1)
